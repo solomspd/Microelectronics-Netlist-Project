@@ -49,7 +49,7 @@ void pullup_circut (string input) {
 		}
 		else if (op[i] == '|') {
 			c[i+1].source = c[i].source;
-			c[i+1].drain = c[i ].drain;
+			c[i+1].drain = c[i].drain;
 		}
 	}
 
