@@ -1,3 +1,4 @@
+
 //
 // Created by solom on 06/05/19.
 //
@@ -45,12 +46,20 @@ int main(){
 
 
     memset(tree, -1, sizeof tree);
-
+    Vdd = new int;
+    gnd = new int;
     tree[0] = -2;
     tree[1] = 'a';
     tree[2] = 'b';
+    int y = 111;
     std::pair<int*, int*> temp = get_ends();
+    temp.first = Vdd;
+    *temp.second = y;
     std::cout << *temp.first << std::endl << *temp.second << std::endl;
+    int j = 0;
+    for (auto i : netlist) {
+        std::cout << 'M' << j++ << *i->bdy << ' ' << *i->drn << ' ' << *i->snk << ' ' << *i->snk << ' ' << "PMOS" << std::endl;
+    }
 
     return 0;
 
