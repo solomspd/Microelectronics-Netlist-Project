@@ -1,6 +1,7 @@
 #include<iostream>
 #include<string>
 #include<stack>
+
 using namespace std;
 
 
@@ -27,6 +28,7 @@ void tocirc(string str1) {
 		}
 	}
 }
+
 int order(char c)
 {
 	 if (c == '&')
