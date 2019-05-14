@@ -1,33 +1,7 @@
 #include<iostream>
 #include<string>
 #include<stack>
-
 using namespace std;
-
-
-void tocirc(string str1) {
-	stack<char> s1;
-	char x1, x2;
-	for (int i = str1.length()-1; i >= 0; i--) {
-		s1.push(str1[i]);
-	}
-	for (int i=0;i<str1.length();i++){
-		if (str1[i] == '&') {
-			x1 = s1.top();
-			s1.pop();
-			x2 = s1.top();
-			s1.pop();
-			//apply the and mosfet
-		}
-		else if (str1[i] == '|') {
-			x1 = s1.top();
-			s1.pop();
-			x2 = s1.top();
-			s1.pop();
-			//apply the or mosfet
-		}
-	}
-}
 
 int order(char c)
 {
@@ -38,9 +12,6 @@ int order(char c)
 	else
 		return -1;
 }
-
-// The main function to convert infix expression 
-//to postfix expression 
 string conv(string str)
 {
 	stack<char> in;
@@ -48,7 +19,6 @@ string conv(string str)
 	string eq;
 	for (int i = 0; i < str.length(); i++)
 	{
-		
 		if ((str[i] >= 'a' && str[i] <= 'z'))
 			eq += str[i];
  
@@ -80,7 +50,6 @@ string conv(string str)
 		}
 
 	}
-	//Pop all the remaining elements from the stack 
 	while (in.top() != ':')
 	{
 		char c = in.top();
@@ -91,12 +60,45 @@ string conv(string str)
 	cout << eq << endl;
 
 }
+bool checkop(char x)
+{
+	switch (x) {
+	case '&':
+	case '|':
+		return true;
+	}
+	return false;
+}
+string prefinal(string pref)
+{
+	stack<string> spre ;
+	int length = pref.size();
+	for (int i = 0; i < length; i++) {
+		if (checkop(pref[i])) {
+			string temp1 = spre.top();
+			spre.pop();
+			string temp2 = spre.top();
+			spre.pop();
+			string result = pref[i] + temp2 + temp1;
+
+			spre.push(result);
+		}
+
+		else {
+		spre.push(string(1, pref[i]));
+		}
+	}
+
+	return spre.top();
+}
 
 int main()
 {
-	string str,str1;
+	string str= "(a&b)|c";
 	string str1= conv(str);
-	tocirc(str1);
+	cout << str1 << endl;
+	cout << prefinal(str1) << endl;
+	system("pause");
 	return 0;
 }
  
