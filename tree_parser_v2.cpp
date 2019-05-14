@@ -28,7 +28,7 @@ struct mos {
     int* snk;
 };
 
-std::vector<mos*> netlist;
+std::vector<mos*> up_netlist, down_netlist;
 
 int* Vdd, *gnd;
 int uni1 = 105;
@@ -36,11 +36,11 @@ int nMOS = 0, pMOS = 0;
 int inter = 1000;
 int count = 0;
 int inter1 = 1000;
+bool up_down;
 
-std::pair<int*, int*> pull_up(int = 0);
-std::pair<int*, int*> pull_down(int = 0);
-std::pair<int*, int*> create_and(std::pair<int*, int*>&, std::pair<int*, int*>&);
-std::pair<int*, int*> create_or(std::pair<int*, int*>&, std::pair<int*, int*>&);
+std::pair<int**, int**> get_ends(int = 0);
+std::pair<int**, int**> create_and(std::pair<int**, int**>&, std::pair<int**, int**>&);
+std::pair<int**, int**> create_or(std::pair<int**, int**>&, std::pair<int**, int**>&);
 std::pair<int*, int*> create_not(std::pair<int*, int*>&);
 
 int main(){
@@ -48,18 +48,29 @@ int main(){
 
     memset(tree, -1, sizeof tree);
     Vdd = new int;
+    *Vdd = 1;
     gnd = new int;
+    *gnd = -1;
     tree[0] = -2;
     tree[1] = 'a';
     tree[2] = 'b';
-    int y = 111;
-    std::pair<int*, int*> temp = pull_up(); //returns a pair of pointers that are the start and end wire for the generated pull up network
-    *temp.first = *Vdd; //make start = Vdd
-    *temp.second = y; //make end = y
-    std::cout << "Vdd: " << *temp.first << std::endl << "Gnd: " << *temp.second << std::endl << std::endl << std::endl << "Netlist: " << std::endl << std::endl;
+    int* y = new int;
+    *y = 111;
+    up_down = true;
+    std::pair<int**, int**> up = get_ends(); //returns a pair of pointers that are the start and end wire for the generated pull up network
+    up_down = false;
+    std::pair<int**, int**> down = get_ends();
+    **up.first = *Vdd; //make start = Vdd
+    **up.second = *y; //make end = y
+    **down.first = *y;
+    **down.second = *gnd;
+    std::cout << "Vdd: " << **up.first << std::endl << "Gnd: " << **down.second << std::endl << std::endl << std::endl << "Netlist: " << std::endl << std::endl;
     int j = 0;
-    for (auto i : netlist) {
-        std::cout << 'M' << j++ << ' ' << *i->bdy << ' ' << *i->drn << ' ' << *i->snk << ' ' << *i->snk << ' ' << "PMOS" << std::endl; //printing netlist
+    for (auto i : up_netlist) {
+        std::cout << 'M' << j++ << ' ' << *i->snk << ' ' << *i->bdy << ' ' << *i->drn << ' ' << *i->drn << ' ' << "PMOS" << std::endl; //printing netlist
+    }
+    for (auto i : down_netlist) {
+        std::cout << 'M' << j++ << ' ' << *i->snk << ' ' << *i->bdy << ' ' << *i->drn << ' ' << *i->drn << ' ' << "NMOS" << std::endl;
     }
 
     return 0;
@@ -68,7 +79,7 @@ int main(){
 
 
 //To better interpret this, suppose the view from the function opinion is just a tree with a parent and 2 children nodes with each node presenting a circuit (except the parent). The children return the their start and end wires to the parent. The parent then combines the 4 wires together down to 2 according to the parent's value. The parent then returns the 2 new wires.
-std::pair<int*, int*> pull_up(int parent_loc) {
+std::pair<int**, int**> get_ends(int parent_loc) {
     int parent = tree[parent_loc]; //parent to evaluate
 
     int child_1_loc = parent_loc * 2 + 1, child_2_loc = child_1_loc + 1; //location of parents children
@@ -76,24 +87,33 @@ std::pair<int*, int*> pull_up(int parent_loc) {
     int child_1 = tree[child_1_loc]; //value of child
     int child_2 = tree[child_2_loc]; //value of child
 
-    std::pair<int*, int*> child_1_end, child_2_end; //will be the start and end wires that will be recursively returned
+    std::pair<int**, int**> child_1_end, child_2_end; //will be the start and end wires that will be recursively returned
+
     if (child_1 != -1) {
-        child_1_end = pull_up(child_1_loc); //start and end wires of child 1
+        child_1_end = get_ends(child_1_loc); //start and end wires of child 1
     }
 
     if (child_2 != -1) {
-        child_2_end = pull_up(child_2_loc); //start and end wires of child 2
+        child_2_end = get_ends(child_2_loc); //start and end wires of child 2
     }
 
-    std::pair<int*, int*> ret;
+    std::pair<int**, int**> ret;
 
     if (parent < 0 && child_1 != -1 && child_2 != -1) { //enter case if children not null and parent is one of &, | or '. meaning the children have their start and end wires ready
         switch (parent) {
-            case -2: ret = create_and(child_1_end, child_2_end);
+            case -2: if (up_down) {
+                    ret = create_and(child_1_end, child_2_end);
+                } else {
+                    ret = create_or(child_1_end, child_2_end);
+                }
                 break;
-            case -3: ret = create_or(child_1_end, child_2_end);
+            case -3: if (up_down) {
+                    ret = create_or(child_1_end, child_2_end);
+                } else {
+                    ret = create_and(child_1_end, child_2_end);
+                }
                 break;
-            case -4: ret = create_not(child_1_end);
+            case -4: //ret = create_not(child_1_end);
                 break;
             default: std::cout << "ERROR";
         }
@@ -105,22 +125,26 @@ std::pair<int*, int*> pull_up(int parent_loc) {
         *new_mos->drn= ++uni1;
         new_mos->snk = new int;
         *new_mos->snk = ++uni1;
-        netlist.push_back(new_mos); //push to the netlist so we can output it later and values are still changed in the netlist due to pointers
-        ret = {new_mos->drn, new_mos->snk}; //start and end of a single MOSFET
+        if (up_down) {
+            up_netlist.push_back(new_mos); //push to the netlist so we can output it later and values are still changed in the netlist due to pointers
+        } else {
+            down_netlist.push_back(new_mos);
+        }
+        ret = {&new_mos->drn, &new_mos->snk}; //start and end of a single MOSFET
     }
     return ret;
 }
 
-std::pair<int*,int*> pull_down(int parent_loc) {
 
-}
-
-std::pair<int*, int*> create_and(std::pair<int*, int*> &in1, std::pair<int*, int*> &in2) {
+std::pair<int**, int**> create_and(std::pair<int**, int**> &in1, std::pair<int**, int**> &in2) {
+    delete *in2.first;
     *in2.first = *in1.second;
     return {in1.first, in2.second};
 }
 
-std::pair<int*, int*> create_or(std::pair<int*, int*> &in1, std::pair<int*, int*> &in2) {
+std::pair<int**, int**> create_or(std::pair<int**, int**> &in1, std::pair<int**, int**> &in2) {
+    delete *in2.first;
+    delete *in2.second;
     *in2.first = *in1.first;
     *in2.second = *in1.second;
     return {in1.first, in1.second};
