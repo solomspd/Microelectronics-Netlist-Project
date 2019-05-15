@@ -91,12 +91,14 @@ string prefinal(string pref)
 
 			spre.push(result);
 		}
+		//THIS THE CONDITION HAVING THE PROBLEM
 		else if (pref[i] == '^') {
 			string temp3 = spre.top();
 			spre.pop();
-			string res = pref[i] + temp3;
+			string res = pref[i]+temp3;
 			spre.push(res);
 		}
+		//IT ENDS HERE
 
 		else
 			spre.push(string(1, pref[i]));
