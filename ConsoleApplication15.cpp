@@ -3,6 +3,28 @@
 #include<stack>
 using namespace std;
 
+bool checkop(char x)
+{
+	switch (x) {
+	case '&':
+	case '|':
+	case '^':
+		return true;
+	}
+	return false;
+}
+//string checkstring(string str) {
+//	int x=0;
+//	for (int i = x; i < str.length(); i++) {
+//		if (isalpha(str[i]) || checkop(str[i])) {
+//			if (str[i + 1] != '^') { str.insert(i + 1, "^"); x = i + 2; }
+//			else {
+//				str.erase(i + 1, 1); x = i + 1;
+//			}
+//		}
+//	}
+//	return str;
+//}
 int order(char c)
 {
 	if (c == '^')
@@ -67,17 +89,7 @@ string conv(string str)
 	cout << eq << endl;
 
 }
-bool checkop(char x)
-{
-	switch (x) {
-	case '&':
-	case '|':
-	case '^':
-		return true;
-	}
-	return false;
-}
-string prefinal(string pref)
+string prefinal(string pref,string group[100],int &ind)
 {
 	stack<string> spre;
 	int length = pref.size();
@@ -87,33 +99,74 @@ string prefinal(string pref)
 			spre.pop();
 			string temp2 = spre.top();
 			spre.pop();
+			//Here where i try to make it an array of strings
+			group[ind] = pref[i];
+			ind++;
+			group[ind] = temp2;
+			ind++;
+			group[ind] = temp1;
+			ind++;
 			string result = pref[i] + temp2 + temp1;
+			//group[ind++] = result;
 
 			spre.push(result);
 		}
-		//THIS THE CONDITION HAVING THE PROBLEM
+		
 		else if (pref[i] == '^') {
 			string temp3 = spre.top();
 			spre.pop();
-			string res = pref[i]+temp3;
+			string res = temp3+ pref[i] ;
+			//group[ind] = res;
+		//	ind++;
 			spre.push(res);
 		}
-		//IT ENDS HERE
 
-		else
+		else {
 			spre.push(string(1, pref[i]));
-
+			//group[ind++] = pref[i];
+		}
 	}
 
 	return spre.top();
 }
+//string manuip(string str) {
+//	string arr[100],arr1[100];
+//	//for (int i = 0; i < 100; i++) arr[i] = "";
+//	int index = 0;
+//	string eq;
+//	for (int i = 0; i < str.length(); i++) {
+//		if (isalpha(str[i]) || checkop(str[i]) || str[i] == '(') 
+//			arr[index] += str[i]; 
+//		else if (str[i] == ')') {
+//			arr[index] += str[i];
+//			if (str[i + 1] != NULL && str[i + 1] == '^') {
+//				arr1[index]=checkstring(arr[index]);
+//				index++;
+//			}
+//			else continue;
+//		}
+//		else continue;
+//	}
+//	for (int i = 0; i < index; i++) {
+//		eq += arr1[i];
+//	}
+//	
+//	return eq;
+//}
 
 int main()
 {
-	string str = "(a&b)";
+	string group[100];
+	int ind=0;
+		string str = "a^&b|c^&d";
 	string str1 = conv(str);
 	cout << str1 << endl;
-	cout << prefinal(str1) << endl;
+	cout << prefinal(str1,group,ind) << endl;
+	
+	for (int i =0; i < ind;i++) {
+		cout << group[i];
+	}
+	cout << endl;
 	system("pause");
 	return 0;
 }
