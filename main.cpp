@@ -51,11 +51,76 @@ int inter = 1000;
 int count = 0;
 int inter1 = 1000;
 bool up_down;
+int top = -1;
+node *arr[35];
+std::string group[1000];
 
 std::pair<int**, int**> get_ends(node*);
 std::pair<int**, int**> create_and(std::pair<int**, int**>&, std::pair<int**, int**>&);
 std::pair<int**, int**> create_or(std::pair<int**, int**>&, std::pair<int**, int**>&);
 std::pair<int**, int**> create_not(std::pair<int**, int**>&);
+
+bool checkop(std::string);
+int order(char);
+std::string conv(std::string);
+void push(node*);
+node* pop();
+void create_expr_tree(std::string[]);
+
+int main(){
+
+
+    //memset(tree, -1, sizeof tree);
+    for (int i = 0; i < 1000; i++) {
+        group[i] = "`";
+    }
+    std::string str = "a\'&b\'|c\'&d";
+    std::string str1 = conv(str);
+    std::string str2 = str1;
+
+    int gr = 0;
+
+    for (int i = 0; i < str2.length(); i++) {
+        if (str2[i] == '&' || str2[i] == '|') { group[gr] = str2[i]; gr++; }
+        else if (isalpha(str2[i])) {
+            if (isalpha(str2[i + 1])) { group[gr] = str2[i]; gr++; }
+            else if (str2[i + 1] == '\'') { group[gr].append(1,str2[i]); group[gr].append(1, str2[i+1]); gr++; }
+            else if (str2[i + 1] == '&' || str2[i + 1] == '|') { group[gr] = str2[i]; gr++; }
+            else continue;
+        }
+        else if (str2[i] == '\'') continue;
+    }
+
+    create_expr_tree(group);
+
+    tree = arr[0];
+
+    Vdd = new int;
+    *Vdd = -1;
+    gnd = new int;
+    *gnd = 0;
+    int* y = new int;
+    *y = -2;
+    up_down = true;
+    std::pair<int**, int**> up = get_ends(tree); //returns a pair of pointers that are the start and end wire for the generated pull up network
+    up_down = false;
+    std::pair<int**, int**> down = get_ends(tree);
+    **up.first = *Vdd; //make start = Vdd
+    **up.second = *y; //make end = y
+    **down.first = *y;
+    **down.second = *gnd;
+    std::cout << "Vdd: " << **up.first << std::endl << "Gnd: " << **down.second << std::endl << std::endl << std::endl << "Netlist: " << std::endl << std::endl;
+    int j = 0;
+    for (auto i : up_netlist) {
+        std::cout << 'M' << j++ << ' ' << *i->snk << ' ' << *i->bdy << ' ' << *i->drn << ' ' << *i->drn << ' ' << "PMOS" << std::endl; //printing netlist
+    }
+    for (auto i : down_netlist) {
+        std::cout << 'M' << j++ << ' ' << *i->snk << ' ' << *i->bdy << ' ' << *i->drn << ' ' << *i->drn << ' ' << "NMOS" << std::endl;
+    }
+
+    return 0;
+
+}
 
 
 bool checkop(std::string x)
@@ -68,18 +133,7 @@ bool checkop(std::string x)
     }
     return false;
 }
-//string checkstring(string str) {
-//	int x=0;
-//	for (int i = x; i < str.length(); i++) {
-//		if (isalpha(str[i]) || checkop(str[i])) {
-//			if (str[i + 1] != '\'') { str.insert(i + 1, "\'"); x = i + 2; }
-//			else {
-//				str.erase(i + 1, 1); x = i + 1;
-//			}
-//		}
-//	}
-//	return str;
-//}
+
 //dictating the order of the operators
 int order(char c)
 {
@@ -92,6 +146,7 @@ int order(char c)
     else
         return -1;
 }
+
 // changing from infix to postfix
 std::string conv(std::string str)
 {
@@ -151,23 +206,6 @@ std::string conv(std::string str)
 
 }
 
-
-int top = -1;
-node *arr[35];
-
-int r(char inputchar)
-{ //for checking symbol is operand or operator
-    if (inputchar == '+' || inputchar == '-' || inputchar == '*' || inputchar
-                                                                    == '/')
-        return (-1);
-    else if (inputchar >= 'a' || inputchar <= 'z')
-        return (1);
-    else if (inputchar >= 'A' || inputchar <= 'Z')
-        return (1);
-    else
-        return (-99); //for error
-}
-
 //it is used for inseting an single element in//a tree, i.e. is pushing of single element.
 void push(node *tree)
 {
@@ -183,90 +221,33 @@ node *pop()
 
 void create_expr_tree(std::string suffix[1000])
 {
-    std::string symbol;
-    node *newl, *ptr1, *ptr2;
-    int flag; //flag=-1 when operator and flag=1 when operand
-    symbol = suffix[0]; //Read the first symbol from the postfix expr.
-    for (int i = 1; symbol != "`"; i++)
-    { //continue till end of the expr.
-        flag = checkop(symbol); //check symbol is operand or operator.
-        if (!flag)//if symbol is operand.
+    std::string cur;
+    node *new_parent, *child_1, *child_2;
+    int is_var;
+    cur = suffix[0];
+    for (int i = 1; cur != "`"; i++)
+    {
+        is_var = checkop(cur);
+        if (!is_var)
         {
-            newl = new node;
-            newl->data = symbol;
-            newl->left = 0;
-            newl->right = 0;
-            push(newl);
+            new_parent = new node;
+            new_parent->data = cur;
+            new_parent->left = nullptr;
+            new_parent->right = nullptr;
+            push(new_parent);
         }
         else
-        { //If the symbol is operator//pop two top elements.
-            ptr1 = pop();
-            ptr2 = pop();
-            newl = new node;
-            newl->data = symbol;
-            newl->left = ptr2;
-            newl->right = ptr1;
-            push(newl);
+        {
+            child_1 = pop();
+            child_2 = pop();
+            new_parent = new node;
+            new_parent->data = cur;
+            new_parent->left = child_2;
+            new_parent->right = child_1;
+            push(new_parent);
         }
-        symbol = suffix[i];
+        cur = suffix[i];
     }
-}
-
-std::string group[1000];
-
-int main(){
-
-
-    //memset(tree, -1, sizeof tree);
-    for (int i = 0; i < 1000; i++) {
-        group[i] = "`";
-    }
-    std::string str = "a\'&b\'|c\'&d";
-    std::string str1 = conv(str);
-    std::string str2 = str1;
-
-    int gr = 0;
-
-    for (int i = 0; i < str2.length(); i++) {
-        if (str2[i] == '&' || str2[i] == '|') { group[gr] = str2[i]; gr++; }
-        else if (isalpha(str2[i])) {
-            if (isalpha(str2[i + 1])) { group[gr] = str2[i]; gr++; }
-            else if (str2[i + 1] == '\'') { group[gr].append(1,str2[i]); group[gr].append(1, str2[i+1]); gr++; }
-            else if (str2[i + 1] == '&' || str2[i + 1] == '|') { group[gr] = str2[i]; gr++; }
-            else continue;
-        }
-        else if (str2[i] == '\'') continue;
-    }
-
-    create_expr_tree(group);
-
-    tree = arr[0];
-
-    Vdd = new int;
-    *Vdd = -1;
-    gnd = new int;
-    *gnd = 0;
-    int* y = new int;
-    *y = -2;
-    up_down = true;
-    std::pair<int**, int**> up = get_ends(tree); //returns a pair of pointers that are the start and end wire for the generated pull up network
-    up_down = false;
-    std::pair<int**, int**> down = get_ends(tree);
-    **up.first = *Vdd; //make start = Vdd
-    **up.second = *y; //make end = y
-    **down.first = *y;
-    **down.second = *gnd;
-    std::cout << "Vdd: " << **up.first << std::endl << "Gnd: " << **down.second << std::endl << std::endl << std::endl << "Netlist: " << std::endl << std::endl;
-    int j = 0;
-    for (auto i : up_netlist) {
-        std::cout << 'M' << j++ << ' ' << *i->snk << ' ' << *i->bdy << ' ' << *i->drn << ' ' << *i->drn << ' ' << "PMOS" << std::endl; //printing netlist
-    }
-    for (auto i : down_netlist) {
-        std::cout << 'M' << j++ << ' ' << *i->snk << ' ' << *i->bdy << ' ' << *i->drn << ' ' << *i->drn << ' ' << "NMOS" << std::endl;
-    }
-
-    return 0;
-
 }
 
 

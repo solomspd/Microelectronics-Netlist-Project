@@ -13,5 +13,5 @@ add_executable(Microelectronics-Netlist-Project
         #tre_parser_v4.cpp
         #tree_parser_v5.cpp
         #microtrial.cpp
-        main.cpp
+        #main.cpp
         )
