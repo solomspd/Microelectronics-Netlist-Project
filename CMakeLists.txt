@@ -7,5 +7,8 @@ add_executable(Microelectronics-Netlist-Project
         #tree_parser.cpp
         #microelectronics_demo.cpp
         #parentheses.cpp
-        tree_parser_v2.cpp
+        #tree_parser_v2.cpp
+        #ConsoleApplication15.cpp
+        #tree_parser_v3.cpp
+        tre_parser_v4.cpp
         )

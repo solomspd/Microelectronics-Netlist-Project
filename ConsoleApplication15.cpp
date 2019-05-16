@@ -14,6 +14,7 @@ int order(char c)
 	else
 		return -1;
 }
+
 string conv(string str)
 {
 	stack<char> in;
@@ -112,7 +113,6 @@ int main()
 	string str1 = conv(str);
 	cout << str1 << endl;
 	cout << prefinal(str1) << endl;
-	system("pause");
 	return 0;
 }
 
