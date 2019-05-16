@@ -14,7 +14,6 @@ int order(char c)
 	else
 		return -1;
 }
-
 string conv(string str)
 {
 	stack<char> in;
@@ -92,12 +91,14 @@ string prefinal(string pref)
 
 			spre.push(result);
 		}
+		//THIS THE CONDITION HAVING THE PROBLEM
 		else if (pref[i] == '^') {
 			string temp3 = spre.top();
 			spre.pop();
-			string res = pref[i] + temp3;
+			string res = pref[i]+temp3;
 			spre.push(res);
 		}
+		//IT ENDS HERE
 
 		else
 			spre.push(string(1, pref[i]));
@@ -113,6 +114,7 @@ int main()
 	string str1 = conv(str);
 	cout << str1 << endl;
 	cout << prefinal(str1) << endl;
+	system("pause");
 	return 0;
 }
 
