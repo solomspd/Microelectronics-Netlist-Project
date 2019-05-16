@@ -327,7 +327,7 @@ std::pair<int**, int**> get_ends(node* ptr) {
         }
         ret = {&new_mos->drn, &new_mos->snk}; //start and end of a single MOSFET
     }
-    if (parent[parent.length()-1] == '\'') {
+    if (parent.back() == '\'') {
         ret = create_not(ret);
     }
     return ret;
