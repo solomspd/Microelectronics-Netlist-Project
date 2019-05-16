@@ -10,8 +10,8 @@
 #include <cstring>
 #include <vector>
 #include <string>
-#include <stack>
-#include <bits/shared_ptr.h>
+#include<stack>
+
 
 
 const int N = 1e3;
@@ -23,15 +23,27 @@ struct node
     node *right;
 };
 
+node* tree;
+
+/*
+
+// READ THIS //
+
+ NULL = -1
+ AND = -2
+ OR = -3
+ NOT = -4
+
+*/
+
 struct mos {
-    std::shared_ptr<int> drn;
+    int* drn;
     int* bdy;
-    std::shared_ptr<int> snk;
+    int* snk;
 };
 
 std::vector<mos*> up_netlist, down_netlist;
 
-node* tree;
 int* Vdd, *gnd;
 int uni1 = -3;
 int nMOS = 0, pMOS = 0;
@@ -43,7 +55,7 @@ int top = -1;
 node *arr[35];
 std::string group[1000];
 
-std::pair<std::shared_ptr, shared_ptr> get_ends(node*);
+std::pair<int**, int**> get_ends(node*);
 std::pair<int**, int**> create_and(std::pair<int**, int**>&, std::pair<int**, int**>&);
 std::pair<int**, int**> create_or(std::pair<int**, int**>&, std::pair<int**, int**>&);
 std::pair<int**, int**> create_not(std::pair<int**, int**>&);

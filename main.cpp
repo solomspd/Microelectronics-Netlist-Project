@@ -10,7 +10,7 @@
 #include <cstring>
 #include <vector>
 #include <string>
-#include<stack>
+#include <stack>
 
 
 
@@ -23,18 +23,6 @@ struct node
     node *right;
 };
 
-node* tree;
-
-/*
-
-// READ THIS //
-
- NULL = -1
- AND = -2
- OR = -3
- NOT = -4
-
-*/
 
 struct mos {
     int* drn;
@@ -44,6 +32,7 @@ struct mos {
 
 std::vector<mos*> up_netlist, down_netlist;
 
+node* tree;
 int* Vdd, *gnd;
 int uni1 = -3;
 int nMOS = 0, pMOS = 0;
