@@ -8,7 +8,7 @@ bool checkop(char x)
 	switch (x) {
 	case '&':
 	case '|':
-	case '^':
+	case '\'':
 		return true;
 	}
 	return false;
@@ -17,7 +17,7 @@ bool checkop(char x)
 //	int x=0;
 //	for (int i = x; i < str.length(); i++) {
 //		if (isalpha(str[i]) || checkop(str[i])) {
-//			if (str[i + 1] != '^') { str.insert(i + 1, "^"); x = i + 2; }
+//			if (str[i + 1] != '\'') { str.insert(i + 1, "\'"); x = i + 2; }
 //			else {
 //				str.erase(i + 1, 1); x = i + 1;
 //			}
@@ -28,7 +28,7 @@ bool checkop(char x)
 //dictating the order of the operators
 int order(char c)
 {
-	if (c == '^')
+	if (c == '\'')
 		return 3;
 	if (c == '&')
 		return 2;
@@ -46,11 +46,11 @@ string conv(string str)
 	for (int i = 0; i < str.length(); i++)
 	{
 		//if complemented input left as it is
-		if ((str[i] >= 'a' && str[i] <= 'z' && str[i + 1] == '^'))
+		if ((str[i] >= 'a' && str[i] <= 'z' && str[i + 1] == '\''))
 			eq += str[i];
 		// if not it was complemented
-		else if ((str[i] >= 'a' && str[i] <= 'z' && str[i + 1] != '^'))
-			eq = eq + str[i] + '^';
+		else if ((str[i] >= 'a' && str[i] <= 'z' && str[i + 1] != '\''))
+			eq = eq + str[i] + '\'';
 
 
 		else if (str[i] == '(')
@@ -113,7 +113,7 @@ string prefinal(string pref)
 			spre.push(result);
 		}
 		//if not is encountered
-		else if (pref[i] == '^') {
+		else if (pref[i] == '\'') {
 			string temp3 = spre.top();
 			spre.pop();
 			string res = temp3 + pref[i];
@@ -140,7 +140,7 @@ string prefinal(string pref)
 //			arr[index] += str[i]; 
 //		else if (str[i] == ')') {
 //			arr[index] += str[i];
-//			if (str[i + 1] != NULL && str[i + 1] == '^') {
+//			if (str[i + 1] != NULL && str[i + 1] == '\'') {
 //				arr1[index]=checkstring(arr[index]);
 //				index++;
 //			}
@@ -159,7 +159,7 @@ int main()
 {
 	string group[1000];
 	int gr = 0;
-	string str = "a^&b^|c^&d";
+	string str = "a\'&b\'|c\'&d";
 	string str1 = conv(str);
 	cout << str1 << endl; // postfix str
 	string str2 = prefinal(str1);
@@ -170,17 +170,18 @@ int main()
 		if (str2[i] == '&' || str2[i] == '|') { group[gr] = str2[i]; gr++; }
 		else if (isalpha(str2[i])) {
 			if (isalpha(str2[i + 1])) { group[gr] = str2[i]; gr++; }
-			else if (str2[i + 1] == '^') { group[gr].append(1,str2[i]); group[gr].append(1, str2[i+1]); gr++; }
+			else if (str2[i + 1] == '\'') { group[gr].append(1,str2[i]); group[gr].append(1, str2[i+1]); gr++; }
 			else if (str2[i + 1] == '&' || str2[i + 1] == '|') { group[gr] = str2[i]; gr++; }
 			else continue;
 		}
-		else if (str2[i] == '^') continue;
+		else if (str2[i] == '\'') continue;
 	}
-	/*for (int j = 0; j < gr; j++) {
+	cout << endl;
+	for (int j = 0; j < gr; j++) {
 		cout << group[j];
+	    cout << endl;
 	}
-	cout << endl;*/
-	system("pause");
+
 	return 0;
 }
 
