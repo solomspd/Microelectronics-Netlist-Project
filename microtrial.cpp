@@ -3,9 +3,9 @@
 #include<stack>
 using namespace std;
 
-bool checkop(char x)
+bool checkop(string x)
 {
-	switch (x) {
+	switch (x[0]) {
 	case '&':
 	case '|':
 	case '\'':
@@ -155,18 +155,99 @@ string prefinal(string pref)
 //	return eq;
 //}
 
+struct node
+{
+    string data;
+    node *left;
+    node *right;
+};
+
+char postfix[35];
+int top = -1;
+node *arr[35];
+
+int r(char inputchar)
+{ //for checking symbol is operand or operator
+    if (inputchar == '+' || inputchar == '-' || inputchar == '*' || inputchar
+                                                                    == '/')
+        return (-1);
+    else if (inputchar >= 'a' || inputchar <= 'z')
+        return (1);
+    else if (inputchar >= 'A' || inputchar <= 'Z')
+        return (1);
+    else
+        return (-99); //for error
+}
+
+//it is used for inseting an single element in//a tree, i.e. is pushing of single element.
+void push(node *tree)
+{
+    top++;
+    arr[top] = tree;
+}
+
+node *pop()
+{
+    top--;
+    return (arr[top + 1]);
+}
+
+void create_expr_tree(string suffix[1000])
+{
+    string symbol;
+    node *newl, *ptr1, *ptr2;
+    int flag; //flag=-1 when operator and flag=1 when operand
+    symbol = suffix[0]; //Read the first symbol from the postfix expr.
+    for (int i = 1; symbol != "`"; i++)
+    { //continue till end of the expr.
+        flag = checkop(symbol); //check symbol is operand or operator.
+        if (!flag)//if symbol is operand.
+        {
+            newl = new node;
+            newl->data = symbol;
+            newl->left = 0;
+            newl->right = 0;
+            push(newl);
+        }
+        else
+        { //If the symbol is operator//pop two top elements.
+            ptr1 = pop();
+            ptr2 = pop();
+            newl = new node;
+            newl->data = symbol;
+            newl->left = ptr2;
+            newl->right = ptr1;
+            push(newl);
+        }
+        symbol = suffix[i];
+    }
+}
+
+void preOrder(node *tree)
+{
+    if (tree != NULL)
+    {
+        cout << tree->data;
+        preOrder(tree->left);
+        preOrder(tree->right);
+    }
+}
+
 int main()
 {
 	string group[1000];
+	for (int i = 0; i < 1000; i++) {
+	    group[i] = "`";
+	}
 	int gr = 0;
 	string str = "a\'&b\'|c\'&d";
 	string str1 = conv(str);
 	cout << str1 << endl; // postfix str
-	string str2 = prefinal(str1);
-	cout << prefinal(str1) << endl; //correct prefix string
+	string str2 = str1;
+	//cout << prefinal(str1) << endl; //correct prefix string
 
 	//Changing the output string to an array of strings
-	for (int i = 0; i < str2.length() - 1; i++) {
+	for (int i = 0; i < str2.length(); i++) {
 		if (str2[i] == '&' || str2[i] == '|') { group[gr] = str2[i]; gr++; }
 		else if (isalpha(str2[i])) {
 			if (isalpha(str2[i + 1])) { group[gr] = str2[i]; gr++; }
@@ -177,10 +258,10 @@ int main()
 		else if (str2[i] == '\'') continue;
 	}
 	cout << endl;
-	for (int j = 0; j < gr; j++) {
-		cout << group[j];
-	    cout << endl;
-	}
+
+	create_expr_tree(group);
+
+
 
 	return 0;
 }
