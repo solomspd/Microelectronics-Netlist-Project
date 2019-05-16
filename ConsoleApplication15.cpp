@@ -25,6 +25,7 @@ bool checkop(char x)
 //	}
 //	return str;
 //}
+//dictating the order of the operators
 int order(char c)
 {
 	if (c == '^')
@@ -36,6 +37,7 @@ int order(char c)
 	else
 		return -1;
 }
+// changing from infix to postfix
 string conv(string str)
 {
 	stack<char> in;
@@ -43,9 +45,10 @@ string conv(string str)
 	string eq;
 	for (int i = 0; i < str.length(); i++)
 	{
+		//if complemented input left as it is
 		if ((str[i] >= 'a' && str[i] <= 'z' && str[i+1]=='^')) 
 			eq += str[i];
-	
+	// if not it was complemented
 		else if  ((str[i] >= 'a' && str[i] <= 'z' && str[i + 1] != '^')) 
 			eq = eq + str[i] + '^';
 		
@@ -55,6 +58,7 @@ string conv(string str)
 
 		else if (str[i] == ')')
 		{
+			//adding all characters to a temporary string "en"
 			while (in.top() != ':' && in.top() != '(')
 			{
 				char c = in.top();
@@ -67,6 +71,7 @@ string conv(string str)
 				in.pop();
 			}
 		}
+		//making sure the required order of precedence is followed
 		else {
 			while (in.top() != ':' && order(str[i]) <= order(in.top()))
 			{
@@ -85,15 +90,18 @@ string conv(string str)
 		in.pop();
 		eq += c;
 	}
+	// returning string
 	return eq;
-	cout << eq << endl;
+
 
 }
+// changing from post to prefix
 string prefinal(string pref,string group[100],int &ind)
 {
 	stack<string> spre;
 	int length = pref.size();
 	for (int i = 0; i < length; i++) {
+		//if operator and or or are encountered
 		if (pref[i] == '&' || pref[i] == '|') {
 			string temp1 = spre.top();
 			spre.pop();
@@ -111,7 +119,7 @@ string prefinal(string pref,string group[100],int &ind)
 
 			spre.push(result);
 		}
-		
+		//if not is encountered
 		else if (pref[i] == '^') {
 			string temp3 = spre.top();
 			spre.pop();
@@ -126,7 +134,7 @@ string prefinal(string pref,string group[100],int &ind)
 			//group[ind++] = pref[i];
 		}
 	}
-
+	//returning final string
 	return spre.top();
 }
 //string manuip(string str) {
@@ -160,12 +168,12 @@ int main()
 	int ind=0;
 		string str = "a^&b|c^&d";
 	string str1 = conv(str);
-	cout << str1 << endl;
-	cout << prefinal(str1,group,ind) << endl;
+	cout << str1 << endl; // postfix str
+	cout << prefinal(str1,group,ind) << endl; //correct prefix string
 	
 	for (int i =0; i < ind;i++) {
 		cout << group[i];
-	}
+	} //check
 	cout << endl;
 	system("pause");
 	return 0;
