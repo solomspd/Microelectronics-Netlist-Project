@@ -15,5 +15,6 @@ add_executable(Microelectronics-Netlist-Project
         #microtrial.cpp
         #main.cpp
         #test.cpp
-        tree_parser_v6.cpp
+        #tree_parser_v6.cpp
+        main_v2.cpp
         )
