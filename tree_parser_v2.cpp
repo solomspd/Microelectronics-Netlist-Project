@@ -147,10 +147,10 @@ std::pair<int**, int**> create_and(std::pair<int**, int**> &in1, std::pair<int**
 std::pair<int**, int**> create_or(std::pair<int**, int**> &in1, std::pair<int**, int**> &in2) {
     delete *in2.first;
     delete *in2.second;
-    in2.first = in1.first;
     *in2.first = *in1.first;
-    in2.second = in1.second;
+    //in2.first = in1.first;
     *in2.second = *in1.second;
+    //in2.second = in1.second;
     return {in1.first, in1.second};
 }
 

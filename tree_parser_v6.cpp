@@ -1,4 +1,8 @@
 //
+// Created by solom on 17/05/19.
+//
+
+//
 // Created by solom on 16/05/19.
 //
 
@@ -11,7 +15,7 @@
 #include <vector>
 #include <string>
 #include <stack>
-#include <bits/shared_ptr.h>
+
 
 
 const int N = 1e3;
@@ -23,16 +27,22 @@ struct node
     node *right;
 };
 
+struct circ {
+    int data;
+    circ* next;
+};
+
+
 struct mos {
-    std::shared_ptr<int> drn;
-    int* bdy;
-    std::shared_ptr<int> snk;
+    circ* drn;
+    int bdy;
+    circ* snk;
 };
 
 std::vector<mos*> up_netlist, down_netlist;
 
 node* tree;
-int* Vdd, *gnd;
+int Vdd, gnd;
 int uni1 = -3;
 int nMOS = 0, pMOS = 0;
 int inter = 1000;
@@ -43,10 +53,10 @@ int top = -1;
 node *arr[35];
 std::string group[1000];
 
-std::pair<std::shared_ptr<int>, std::shared_ptr<int>> get_ends(node*);
-std::pair<std::shared_ptr<int>, std::shared_ptr<int>> create_and(std::pair<std::shared_ptr<int>, std::shared_ptr<int>>&, std::pair<std::shared_ptr<int>, std::shared_ptr<int>>&);
-std::pair<int**, int**> create_or(std::pair<int**, int**>&, std::pair<int**, int**>&);
-std::pair<int**, int**> create_not(std::pair<int**, int**>&);
+std::pair<circ**, circ**> get_ends(node*);
+std::pair<circ**, circ**> create_and(std::pair<circ**, circ**>&, std::pair<circ**, circ**>&);
+std::pair<circ**, circ**> create_or(std::pair<circ**, circ**>&, std::pair<circ**, circ**>&);
+std::pair<circ**, circ**> create_not(std::pair<circ**, circ**>&);
 
 bool checkop(std::string);
 int order(char);
@@ -79,31 +89,68 @@ int main(){
         else if (str2[i] == '\'') continue;
     }
 
+    group[0] = "a";
+
     create_expr_tree(group);
 
     tree = arr[0];
 
-    Vdd = new int;
-    *Vdd = -1;
-    gnd = new int;
-    *gnd = 0;
-    int* y = new int;
-    *y = -2;
+    Vdd = -1;
+    gnd = 0;
+    int y = -2;
     up_down = true;
     auto up = get_ends(tree); //returns a pair of pointers that are the start and end wire for the generated pull up network
     up_down = false;
     auto down = get_ends(tree);
-//    **up.first = *Vdd; //make start = Vdd
-//    **up.second = *y; //make end = y
-//    **down.first = *y;
-//    **down.second = *gnd;
-//    std::cout << "Vdd: " << **up.first << std::endl << "Gnd: " << **down.second << std::endl << std::endl << std::endl << "Netlist: " << std::endl << std::endl;
-//    int j = 0;
+    auto temp = *up.first;
+    while (temp->next != nullptr) {
+        temp = temp->next;
+    }
+    temp->data = Vdd; //make start = Vdd
+    temp = *up.second;
+    while (temp->next != nullptr) {
+        temp = temp->next;
+    }
+    temp->data = y;
+    temp = *down.first;
+    while (temp->next != nullptr) {
+        temp = temp->next;
+    }
+    temp->data = y; //make end = y
+    temp = *down.second;
+    while (temp->next != nullptr) {
+        temp = temp->next;
+    }
+    temp->data = gnd;
+    std::cout << "Vdd: " << Vdd << std::endl << "Gnd: " << gnd << std::endl << std::endl << std::endl << "Netlist: " << std::endl << std::endl;
+    int j = 0;
     for (auto i : up_netlist) {
-        //std::cout << 'M' << j++ << ' ' << *i->snk << ' ' << *i->bdy << ' ' << *i->drn << ' ' << *i->drn << ' ' << "PMOS" << std::endl; //printing netlist
+        std::cout << 'M' << j++ << ' ';
+        auto temp = i->snk;
+        while (temp->next != nullptr) {
+            temp = temp->next;
+        }
+        std::cout << temp->data << ' ' << i->bdy << ' ';
+
+        temp = i->drn;
+        while (temp->next != nullptr) {
+            temp = temp->next;
+        }
+        std::cout << temp->data << ' ' << temp->data << ' ' << "PMOS" << std::endl; //printing netlist
     }
     for (auto i : down_netlist) {
-        //std::cout << 'M' << j++ << ' ' << *i->snk << ' ' << *i->bdy << ' ' << *i->drn << ' ' << *i->drn << ' ' << "NMOS" << std::endl;
+        std::cout << 'M' << j++ << ' ';
+        auto temp = i->snk;
+        while (temp->next != nullptr) {
+            temp = temp->next;
+        }
+        std::cout << temp->data << ' ' << i->bdy << ' ';
+
+        temp = i->drn;
+        while (temp->next != nullptr) {
+            temp = temp->next;
+        }
+        std::cout << temp->data << ' ' << temp->data << ' ' << "NMOS" << std::endl; //printing netlist
     }
 
     return 0;
@@ -238,20 +285,17 @@ void create_expr_tree(std::string suffix[1000])
     }
 }
 
-struct mos_connection {
-    std::shared_ptr<int> drn = std::make_shared<int>();
-    std::shared_ptr<int> snk = std::make_shared<int>();
-};
 
 //To better interpret this, suppose the view from the function opinion is just a tree with a parent and 2 children nodes with each node presenting a circuit (except the parent). The children return the their start and end wires to the parent. The parent then combines the 4 wires together down to 2 according to the parent's value. The parent then returns the 2 new wires.
-std::pair<std::shared_ptr<int>, std::shared_ptr<int>> get_ends(node* ptr) {
+std::pair<circ**, circ**> get_ends(node* ptr) {
+
     std::string parent =  ptr->data;//parent to evaluate
 
     node* child_1_loc = ptr->left;
     node* child_2_loc = ptr->right; //location of parents children
 
 
-   mos_connection child_1_end, child_2_end; //will be the start and end wires that will be recursively returned
+    std::pair<circ**, circ**> child_1_end, child_2_end; //will be the start and end wires that will be recursively returned
 
     bool c1 = false;
     if (child_1_loc != nullptr) {
@@ -267,7 +311,7 @@ std::pair<std::shared_ptr<int>, std::shared_ptr<int>> get_ends(node* ptr) {
         std::string child_2 = child_2_loc->data; //value of child
     }
 
-    std::pair<int**, int**> ret;
+    std::pair<circ**, circ**> ret;
 
     if (c1 && c2) { //enter case if children not null and parent is one of &, | or '. meaning the children have their start and end wires ready
         switch (parent[0]) {
@@ -287,12 +331,13 @@ std::pair<std::shared_ptr<int>, std::shared_ptr<int>> get_ends(node* ptr) {
         }
     } else { //this creates the start and end wires that are to be combined
         mos* new_mos = new mos;
-        new_mos->bdy = new int;
-        *new_mos->bdy = parent[0];
-        new_mos->drn = new int;
-        *new_mos->drn= --uni1;
-        new_mos->snk = new int;
-        *new_mos->snk = --uni1;
+        new_mos->bdy = parent[0];
+        new_mos->drn = new circ;
+        (*new_mos->drn).data = --uni1;
+        (*new_mos->drn).next = nullptr;
+        new_mos->snk = new circ;
+        (*new_mos->snk).data = --uni1;
+        (*new_mos->snk).next = nullptr;
         if (up_down) {
             up_netlist.push_back(new_mos); //push to the netlist so we can output it later and values are still changed in the netlist due to pointers
         } else {
@@ -307,35 +352,55 @@ std::pair<std::shared_ptr<int>, std::shared_ptr<int>> get_ends(node* ptr) {
 }
 
 
-std::pair<int**, int**> create_and(std::pair<int**, int**> &in1, std::pair<int**, int**> &in2) {
-    **in2.first = **in1.second;
-    *in2.first = *in1.second;
-    in2.first = in1.second;
+std::pair<circ**, circ**> create_and(std::pair<circ**, circ**> &in1, std::pair<circ**, circ**> &in2) {
+    (*in2.first)->next = *in1.second;
     return {in1.first, in2.second};
 }
 
-std::pair<int**, int**> create_or(std::pair<int**, int**> &in1, std::pair<int**, int**> &in2) {
-    **in2.first = **in1.first;
-    *in2.first = *in1.first;
-    in2.first, in1.first;
-    **in2.second = **in1.second;
-    *in2.second = *in1.second;
-    in2.second = in1.second;
-    return {in1.first, in1.second};
+std::pair<circ**, circ**> create_or(std::pair<circ**, circ**> &in1, std::pair<circ**, circ**> &in2) {
+    (*in2.first)->next = *in1.first;
+    (*in2.second)->next = *in1.second;
+    return {in1.first, in2.second};
 }
 
-std::pair<int**, int**> create_not(std::pair<int**, int**> &in) {
-    int* inter = new int;
-    *inter = --uni1;
+std::pair<circ**, circ**> create_not(std::pair<circ**, circ**> &in) {
+    (*in.first)->data = Vdd;
+    circ* inter = new circ;
+    inter->data = --uni1;
+    inter->next = nullptr;
+
     mos* new_mos = new mos;
-    new_mos->bdy = *in.second;
-    new_mos->drn = Vdd;
+
+    new_mos->bdy = (*in.second)->data;
+    new_mos->drn = new circ;
+    new_mos->drn->data = Vdd;
+    new_mos->drn->next = nullptr;
     new_mos->snk = inter;
+
     mos* new_mos_2 = new mos;
-    new_mos_2->bdy = *in.second;
+    new_mos_2->bdy = (*in.second)->data;
     new_mos_2->drn = inter;
-    new_mos_2->snk = gnd;
+    new_mos_2->snk = new circ;
+    new_mos_2->snk->data = gnd;
+    new_mos_2->snk->next = nullptr;
+    (*in.second)->next = nullptr;
+
+    mos* new_mos_3 = new mos;
+    new_mos_3->bdy = inter->data;
+    new_mos_3->drn = new circ;
+    new_mos_3->drn->data = --uni1;
+    new_mos_3->drn->next = nullptr;
+    new_mos_3->snk = new circ;
+    new_mos_3->snk->data = --uni1;
+    new_mos_3->snk->next = nullptr;
+
     up_netlist.push_back(new_mos);
     down_netlist.push_back(new_mos_2);
-    return {in.first, &inter};
+    if (up_down) {
+        up_netlist.push_back(new_mos_3);
+    } else {
+        down_netlist.push_back(new_mos_3);
+    }
+
+    return {&new_mos_3->drn, &new_mos_3->snk};
 }

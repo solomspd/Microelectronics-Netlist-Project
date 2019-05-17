@@ -80,6 +80,8 @@ int main(){
         else if (str2[i] == '\'') continue;
     }
 
+    group[0] = "a";
+
     create_expr_tree(group);
 
     tree = arr[0];
@@ -322,17 +324,18 @@ std::pair<int**, int**> create_or(std::pair<int**, int**> &in1, std::pair<int**,
 }
 
 std::pair<int**, int**> create_not(std::pair<int**, int**> &in) {
-    int* inter = new int;
-    *inter = --uni1;
+    int** inter = new int*;
+    *inter = new int;
+    **inter = --uni1;
     mos* new_mos = new mos;
     new_mos->bdy = *in.second;
     new_mos->drn = Vdd;
-    new_mos->snk = inter;
+    new_mos->snk = *inter;
     mos* new_mos_2 = new mos;
     new_mos_2->bdy = *in.second;
-    new_mos_2->drn = inter;
+    new_mos_2->drn = *inter;
     new_mos_2->snk = gnd;
     up_netlist.push_back(new_mos);
     down_netlist.push_back(new_mos_2);
-    return {in.first, &inter};
+    return {in.first, inter};
 }
