@@ -131,6 +131,10 @@ void voltageSources(vector<int> v_in);
 void simulation(int max);
 void printCMOS(vector<int> v_in, string exp);		
 
+bool isOperator(char c);
+int weightOperator(char c);
+bool precedece(char a, char b);
+
 bool checkop(std::string);
 int order(char);
 std::string conv(std::string);
@@ -289,63 +293,76 @@ int order(char c)
 }
 
 // changing from infix to postfix
-std::string conv(std::string str)
-{
-	std::stack<char> in;
-	in.push(':');
-	std::string eq;
-	for (int i = 0; i < str.length(); i++)
-	{
-		//if complemented input left as it is
-		if ((isalpha(str[i]) && str[i + 1] == '\''))
-			eq += str[i];
-		// if not it was complemented
-		else if ((isalpha(str[i]) && str[i + 1] != '\''))
-			eq = eq + str[i] + '\'';
 
+bool isOperator(char c) {
 
-		else if (str[i] == '(')
-			in.push('(');
-
-		else if (str[i] == ')')
-		{
-			//adding all characters to a temporary string "en"
-			while (in.top() != ':' && in.top() != '(')
-			{
-				char c = in.top();
-				in.pop();
-				eq += c;
-			}
-			if (in.top() == '(')
-			{
-				char c = in.top();
-				in.pop();
-			}
-		}
-		//making sure the required order of precedence is followed
-		else {
-			while (in.top() != ':' && order(str[i]) <= order(in.top()))
-			{
-				char c = in.top();
-				in.pop();
-				eq += c;
-			}
-			if (isalpha(str[i]) || str[i] == '&' || str[i] == '|')
-				in.push(str[i]);
-		}
-
-	}
-	while (in.top() != ':')
-	{
-		char c = in.top();
-		in.pop();
-		eq += c;
-	}
-	// returning string
-	return eq;
-
+	if (c == '(' || c == ')' || c == '&' || c == '|' || c == '\'') return true;
+	else return false;
 
 }
+int weightOperator(char c) {
+	int w = 0;
+	if (c == '(' || c == ')') w = 4;
+	else if (c == '\'') w = 3;
+	else if (c == '&') w = 2;
+	else if (c == '|') w = 1;
+	else w = 0;
+	return w;
+}
+bool precedece(char a, char b) {
+
+	if (weightOperator(a) > weightOperator(b)) return true;
+	else return false;
+
+}
+
+string conv(string infix) {
+
+	string postfix = "";
+	stack<char> order;
+
+	for (int i = 0; i < infix.length(); i++) {
+		if (!isOperator(infix[i])) {
+			if (isalpha(infix[i]) && infix[i + 1] == '\'')
+				postfix += infix[i];
+			else if (isalpha(infix[i]) && infix[i + 1] != '\'')
+			{
+				postfix += infix[i];
+				postfix += '\'';
+
+			}
+		}
+		else if (infix[i] == '(')
+		{
+			order.push(infix[i]);
+		}
+
+		else if (infix[i] == ')')
+		{
+			while (!order.empty() && order.top() != '(') {
+				postfix += order.top();
+				order.pop();
+			}
+			order.pop();
+		}
+		else {
+			while (!order.empty() && order.top() != '(' && precedece(order.top(), infix[i]))
+			{
+				postfix += order.top();
+				order.pop();
+			}
+			order.push(infix[i]);
+		}
+
+	}
+	while (!order.empty()) {
+		postfix += order.top();
+		order.pop();
+	}
+	return postfix;
+
+}
+
 
 //it is used for inseting an single element in//a tree, i.e. is pushing of single element.
 void push(node *tree)
@@ -597,4 +614,6 @@ void printCMOS(vector <int> v_in, string str ) {
 	simulation(maximumPeriod);
 
 }
+
+
 
